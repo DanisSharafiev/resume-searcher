@@ -3,7 +3,7 @@ import sys
 from typing import Any
 
 def get_logger() -> logging.Logger:
-    logger = logging.getLogger("gateway")
+    logger = logging.getLogger("embedder")
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stdout)
         formatter = logging.Formatter(

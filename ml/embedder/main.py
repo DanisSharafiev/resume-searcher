@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from config.logger import get_logger
-from api.v1.routers.base_router import router as base_router
+from models.embedder import Embedder
 
-async def lifespan(app: FastAPI):
+def lifespan(app: FastAPI):
     app.state.logger = get_logger()
     app.state.logger.info("Application startup")
+    app.state.embedder = Embedder(app.state.logger)
     yield
     app.state.logger.info("Application shutdown")
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(base_router, prefix="/api/v1")
