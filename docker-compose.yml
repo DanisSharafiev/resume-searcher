@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # База данных PostgreSQL
   postgres:
-    image: postgres:15
+    image: postgres:17
     container_name: resume_postgres
     environment:
       POSTGRES_DB: resume_db
@@ -11,8 +11,9 @@ services:
       POSTGRES_PASSWORD: resume_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d/
     ports:
-      - "5432:5432"
+      - "5434:5432"
     networks:
       - resume_network
     restart: unless-stopped
@@ -45,6 +46,7 @@ services:
     depends_on:
       - postgres
       - qdrant
+      # - qdrant_migrations
     networks:
       - resume_network
     volumes:
@@ -52,43 +54,43 @@ services:
     restart: unless-stopped
 
   # ML LLM Service
-  ml-llm:
-    build:
-      context: ./ml/llm
-      dockerfile: Dockerfile
-    container_name: resume_ml_llm
-    environment:
-      - PORT=8000
-      - QDRANT_URL=http://qdrant:6333
-    ports:
-      - "8000:8000"
-    depends_on:
-      - qdrant
-    networks:
-      - resume_network
-    volumes:
-      - huggingface_cache:/root/.cache/huggingface
-    restart: unless-stopped
+  # ml-llm:
+  #   build:
+  #     context: ./ml/llm
+  #     dockerfile: Dockerfile
+  #   container_name: resume_ml_llm
+  #   environment:
+  #     - PORT=8000
+  #     - QDRANT_URL=http://qdrant:6333
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - qdrant
+  #   networks:
+  #     - resume_network
+  #   volumes:
+  #     - huggingface_cache:/root/.cache/huggingface
+  #   restart: unless-stopped
 
-  # ML Embedder Service
-  ml-embedder:
-    build:
-      context: ./ml/embedder
-      dockerfile: Dockerfile
-    container_name: resume_ml_embedder
-    environment:
-      - PORT=8001
-      - QDRANT_URL=http://qdrant:6333
-    ports:
-      - "8001:8001"
-    depends_on:
-      - qdrant
-    networks:
-      - resume_network
-    volumes:
-      - huggingface_cache:/root/.cache/huggingface
-      - sentence_transformers_cache:/root/.cache/torch/sentence_transformers
-    restart: unless-stopped
+  # # ML Embedder Service
+  # ml-embedder:
+  #   build:
+  #     context: ./ml/embedder
+  #     dockerfile: Dockerfile
+  #   container_name: resume_ml_embedder
+  #   environment:
+  #     - PORT=8001
+  #     - QDRANT_URL=http://qdrant:6333
+  #   ports:
+  #     - "8001:8001"
+  #   depends_on:
+  #     - qdrant
+  #   networks:
+  #     - resume_network
+  #   volumes:
+  #     - huggingface_cache:/root/.cache/huggingface
+  #     - sentence_transformers_cache:/root/.cache/torch/sentence_transformers
+  #   restart: unless-stopped
 
   # Frontend
   # frontend:

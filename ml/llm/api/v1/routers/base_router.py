@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from api.v1.models.base_model import LLMRequest
-from config.prompts import LLMPrompts
+from backend.gateway.config.prompts import LLMPrompts
 
 router = APIRouter()
 

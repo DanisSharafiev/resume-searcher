@@ -19,3 +19,11 @@ class QdrantConfig:
 
     def get_connection_string(self) -> str:
         return f"qd://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+
+class LLMConfig:
+    def __init__(self, hostname: str, port: int):
+        self.port = port
+        self.hostname = hostname
+
+    def get_connection_string(self) -> str:
+        return f"http://{self.hostname}:{self.port}"
