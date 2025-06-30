@@ -17,4 +17,5 @@ def get_model():
         low_cpu_mem_usage=True
     )
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
     return model.to(device)

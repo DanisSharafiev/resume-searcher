@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.tokenizer = get_tokenizer()
     app.state.model = get_model()
+    # print(torch.cuda.is_available())
     yield
 
 app = FastAPI(lifespan=lifespan)
