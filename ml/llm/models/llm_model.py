@@ -9,7 +9,12 @@ def get_tokenizer():
         )
 
 def get_model():
-    return AutoModelForCausalLM.from_pretrained(
-        Config.MODEL_NAME, torch_dtype=torch.float16,
-        trust_remote_code=True
-        )
+    dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+    model = AutoModelForCausalLM.from_pretrained(
+        Config.MODEL_NAME,
+        torch_dtype=dtype,
+        trust_remote_code=True,
+        low_cpu_mem_usage=True
+    )
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return model.to(device)

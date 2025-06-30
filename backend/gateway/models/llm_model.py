@@ -18,3 +18,9 @@ class LLMModel:
             "data": request.json()
         }
     
+# ```json
+# {
+#     "llm_response_markdown": "# Candidate analysis\n\n**Experience:** ...",
+#     "resume_plain": "Full resume text..."
+# }
+# ```

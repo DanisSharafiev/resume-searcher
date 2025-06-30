@@ -3,7 +3,9 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from models.llm_model import get_model, get_tokenizer
 from api.v1.routers.base_router import router as base_router
 import torch
+from contextlib import asynccontextmanager
 
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.tokenizer = get_tokenizer()
     app.state.model = get_model()

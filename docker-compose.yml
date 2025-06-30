@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # База данных PostgreSQL
   postgres:
     image: postgres:17
     container_name: resume_postgres
@@ -18,7 +17,6 @@ services:
       - resume_network
     restart: unless-stopped
 
-  # Qdrant векторная база данных
   qdrant:
     image: qdrant/qdrant:latest
     container_name: resume_qdrant
@@ -32,47 +30,65 @@ services:
     restart: unless-stopped
 
   # Backend Gateway
-  backend-gateway:
-    build:
-      context: ./backend/gateway
-      dockerfile: Dockerfile
-    container_name: resume_backend_gateway
-    environment:
-      - DATABASE_URL=postgresql://resume_user:resume_password@postgres:5432/resume_db
-      - QDRANT_URL=http://qdrant:6333
-      - PORT=3001
-    ports:
-      - "3001:3001"
-    depends_on:
-      - postgres
-      - qdrant
-      # - qdrant_migrations
-    networks:
-      - resume_network
-    volumes:
-      - ./datasets:/app/datasets
-    restart: unless-stopped
-
-  # ML LLM Service
-  # ml-llm:
+  # backend-gateway:
   #   build:
-  #     context: ./ml/llm
+  #     context: ./backend/gateway
   #     dockerfile: Dockerfile
-  #   container_name: resume_ml_llm
+  #   container_name: resume_backend_gateway
   #   environment:
-  #     - PORT=8000
+  #     - DATABASE_URL=postgresql://resume_user:resume_password@postgres:5432/resume_db
   #     - QDRANT_URL=http://qdrant:6333
+  #     - PORT=3001
   #   ports:
-  #     - "8000:8000"
+  #     - "3001:3001"
   #   depends_on:
+  #     - postgres
   #     - qdrant
+  #     # - qdrant_migrations
   #   networks:
   #     - resume_network
   #   volumes:
-  #     - huggingface_cache:/root/.cache/huggingface
+  #     - ./datasets:/app/datasets
   #   restart: unless-stopped
 
-  # # ML Embedder Service
+  qdrant_migrations:
+    build:
+      context: ./qdrant_migrations
+      dockerfile: Dockerfile
+    container_name: resume_qdrant_migrations
+    environment:
+      - POSTGRES_DB=resume_db
+      - POSTGRES_USER=resume_user
+      - POSTGRES_PASSWORD=resume_password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+    depends_on:
+      - postgres
+      - qdrant
+    networks:
+      - resume_network
+    restart: no
+
+  ml-llm:
+    build:
+      context: ./ml/llm
+      dockerfile: Dockerfile
+    container_name: resume_ml_llm
+    environment:
+      - PORT=8000
+      - QDRANT_URL=http://qdrant:6333
+    ports:
+      - "8000:8000"
+    depends_on:
+      - qdrant
+    networks:
+      - resume_network
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+    restart: unless-stopped
+
   # ml-embedder:
   #   build:
   #     context: ./ml/embedder
@@ -84,7 +100,7 @@ services:
   #   ports:
   #     - "8001:8001"
   #   depends_on:
-  #     - qdrant
+  #     - qdrant_migrations
   #   networks:
   #     - resume_network
   #   volumes:

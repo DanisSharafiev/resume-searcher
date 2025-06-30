@@ -5,4 +5,4 @@ CREATE TABLE IF NOT EXISTS items (
 );
 
 COPY items(text1, text2) FROM '/docker-entrypoint-initdb.d/train_normalized_1.csv' DELIMITER '|' CSV HEADER;
-COPY items(text1, text2) FROM '/docker-entrypoint-initdb.d/train_normalized_2.csv' DELIMITER '|' CSV HEADER;
+-- COPY items(text1, text2) FROM '/docker-entrypoint-initdb.d/train_normalized_2.csv' DELIMITER '|' CSV HEADER;

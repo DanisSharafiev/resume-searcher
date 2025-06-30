@@ -16,11 +16,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Python dependencies
 COPY requirements.txt ./
 
-# RUN pip install uv
-# RUN --mount=type=cache,target=/root/.cache/uv \
-#     uv pip install --system -r requirements.txt
+RUN pip install uv
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --system -r requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+# RUN pip install --no-cache-dir -r requirements.txt
 
 # Pre-download the model to cache it in the image
 # RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
