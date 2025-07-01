@@ -31,6 +31,11 @@ async def search(request: Request, data: SearchRequest):
     logger.info(f"Search request received with query: {data.query}")
     qdrant_model = request.app.state.qdrant_model
     logger.info(f"Embedder connection string: {EmbedderConfig.get_connection_string()}/generate")
+
+    llm_model = request.app.state.llm_model
+    fusion_model = request.app.state.fusion_model
+    logger.info("Generating embedding for the query")
+
     embedding = requests.post(
         EmbedderConfig.get_connection_string() + "/generate",
         json={"text": data.query}
@@ -38,7 +43,16 @@ async def search(request: Request, data: SearchRequest):
     embedding = embedding["response"]
     logger.info(f"Embedding generated: {embedding}")
     embedding = json.loads(embedding)
-    ids = qdrant_model.search(collection_name="first_collection", query=embedding, limit=10)
+    ids_1 = qdrant_model.search(collection_name="first_collection", query=embedding, limit=10)
+
+    llm_response = llm_model.get_query(data.query)
+    embedding = llm_response["data"]
+    logger.info(f"Embedding generated: {embedding}")
+    embedding = json.loads(embedding)
+    ids_2 = qdrant_model.search(collection_name="first_collection", query=embedding, limit=10)
+
+    ids = fusion_model.get_RRF_sorted(60, ids_1, ids_2)
+
     postgres_model = request.app.state.postgres_model
     result = []
     for id in ids:
@@ -62,8 +76,8 @@ async def get_resume(request: Request, resume_id: str):
             
         full_resume = resume[1] + resume[2]
         llm_model = request.app.state.llm_model
-        # llm_response = llm_model.get_response(full_resume)
-        llm_response = {"data": "Sample LLM response based on the resume content"}
+        llm_response = llm_model.get_response(full_resume)
+        # llm_response = {"data": "Sample LLM response based on the resume content"}
         json_maker = request.app.state.json_maker
         llm_response_markdown = json_maker.make_llm_response(llm_response["data"], full_resume)
         return {"resume_id": resume_id, "content": llm_response_markdown}
