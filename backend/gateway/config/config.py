@@ -1,21 +1,26 @@
 class PostgresConfig:
-    def __init__(self, host: str, port: int, user: str, password: str, database: str):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
-        self.database = database
-
-    def get_connection_string(self) -> str:
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+    HOST = "postgres"
+    PORT = 5432
+    USER = "resume_user"
+    PASSWORD = "resume_password"
+    DB = "resume_db"
 
 class QdrantConfig:
-    def __init__(self, host: str, port: int, user: str, password: str, database: str):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
-        self.database = database
+    HOST = "qdrant"
+    PORT = 6333
 
-    def get_connection_string(self) -> str:
-        return f"qd://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+class LLMConfig:
+    HOST = "ml-llm"
+    PORT = 8002
+
+    @classmethod
+    def get_connection_string(cls) -> str:
+        return f"http://{cls.HOST}:{cls.PORT}"
+
+class EmbedderConfig:
+    HOST = "ml-embedder"
+    PORT = 8001
+
+    @classmethod
+    def get_connection_string(cls) -> str:
+        return f"http://{cls.HOST}:{cls.PORT}"
