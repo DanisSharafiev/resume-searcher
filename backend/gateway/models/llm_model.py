@@ -18,6 +18,17 @@ class LLMModel:
             "data": request.json()
         }
     
+    def get_query(self, request_text):
+        request = requests.post(
+            f"{self.connection_string}/generate",
+            json={
+                "query": LLMPrompts.request_prompt + request_text
+            }
+        )
+        return {
+            "prompt": LLMPrompts.request_prompt + request_text,
+            "data": request.json()
+        }
 # ```json
 # {
 #     "llm_response_markdown": "# Candidate analysis\n\n**Experience:** ...",

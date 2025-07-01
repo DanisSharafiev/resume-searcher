@@ -7,6 +7,7 @@ from models.postgres_model import PostgresModel
 from models.llm_model import LLMModel
 from models.json_builder import JsonMaker
 from models.qdrant_model import QdrantModel
+from models.fusion_model import FusionModel
 
 async def lifespan(app: FastAPI):
     app.state.logger = get_logger()
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
     app.state.logger.info("LLM model initialized")
     app.state.qdrant_model = QdrantModel()
     app.state.json_maker = JsonMaker()
+    app.state.fusion_model = FusionModel()
     yield
     app.state.logger.info("Application shutdown")
 
