@@ -67,7 +67,7 @@ if not has_collection(client, "first_collection"):
                                         full_scan_threshold=1000
                                     )),
     )
-    for id_, text in zip(ids[:5000], texts1[:5000]):
+    for id_, text in zip(ids, texts1):
         embedding = requests.post(
             EmbedderConfig.get_connection_string() + "/generate",
             json={"text": text}
