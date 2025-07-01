@@ -1,3 +1,4 @@
 psycopg2-binary
-sentence-transformers
+# sentence-transformers
 qdrant-client
+requests

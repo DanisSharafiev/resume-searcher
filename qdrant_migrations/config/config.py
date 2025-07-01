@@ -7,3 +7,10 @@ class Config:
     QDRANT_HOST = "qdrant"
     QDRANT_PORT = 6333
     
+class EmbedderConfig:
+    HOST = "ml-embedder"
+    PORT = 8001
+
+    @classmethod
+    def get_connection_string(cls) -> str:
+        return f"http://{cls.HOST}:{cls.PORT}"

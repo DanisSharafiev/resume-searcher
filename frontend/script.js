@@ -1,10 +1,11 @@
 const API_CONFIG = {
-    baseUrl: 'http://localhost:8000',
+    baseUrl: 'http://localhost:8006',
     endpoints: {
-        search: '/search',
-        resume: '/resume'
+        search: '/api/v1/search',
+        resume: '/api/v1/resume'
     }
 };
+
 
 const searchInput = document.getElementById('searchInput');
 const searchButton = document.getElementById('searchButton');
@@ -57,38 +58,78 @@ async function performSearch(query) {
         showLoading(true);
         hideExpandedResume();
         clearResults();
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+
         const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.search}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ query: query })
+            body: JSON.stringify({ query: query }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const candidates = await response.json();
+        console.log('Response from server:', candidates);
+        console.log('Type of candidates:', typeof candidates);
+        console.log('Is candidates array?', Array.isArray(candidates));
+        console.log('candidates.results:', candidates.results);
+        console.log('Is candidates.results array?', Array.isArray(candidates.results));
+        
         showLoading(false);
-        displaySearchResults(candidates);
+        // Гарантируем, что в displaySearchResults всегда передается массив
+        let candidatesArr = [];
+        if (Array.isArray(candidates)) {
+            candidatesArr = candidates;
+        } else if (candidates && Array.isArray(candidates.results)) {
+            candidatesArr = candidates.results;
+        } else {
+            console.error('Neither candidates nor candidates.results is an array!');
+            candidatesArr = [];
+        }
+        console.log('Final candidates array:', candidatesArr);
+        console.log('Final array length:', candidatesArr.length);
+        displaySearchResults(candidatesArr);
     } catch (error) {
         console.error('Search error:', error);
         showLoading(false);
-        showError('Error while searching resumes. Check server connection.');
+        showError('Error while searching resumes. ' + (error.message || 'Check server connection.'));
     }
 }
 
 function displaySearchResults(candidates) {
-    if (!candidates || candidates.length === 0) {
+    console.log('displaySearchResults called with:', candidates, 'isArray:', Array.isArray(candidates));
+    
+    // Принудительно преобразуем в массив
+    if (!Array.isArray(candidates)) {
+        console.warn('candidates is not an array, converting to array');
+        candidates = [];
+    }
+    
+    if (candidates.length === 0) {
         showEmptyState();
         return;
     }
-    const resultsHTML = candidates.map(candidate => `
-        <div class="result-card" data-candidate-id="${candidate.id}" onclick="selectCandidate(${candidate.id})">
-            <div class="candidate-name">${escapeHtml(candidate.name)}</div>
-            <div class="candidate-position">${escapeHtml(candidate.position)}</div>
-        </div>
-    `).join('');
-    searchResults.innerHTML = resultsHTML;
+    
+    try {
+        const resultsHTML = candidates.map(candidate => `
+            <div class="result-card" data-candidate-id="${candidate.id}" onclick="selectCandidate(${candidate.id})">
+                <div class="candidate-name">${escapeHtml(candidate.name)}</div>
+                <div class="candidate-position">${escapeHtml(candidate.position)}</div>
+            </div>
+        `).join('');
+        searchResults.innerHTML = resultsHTML;
+    } catch (error) {
+        console.error('Error in displaySearchResults:', error);
+        showError('Error displaying search results: ' + error.message);
+    }
 }
 
 async function selectCandidate(candidateId) {
@@ -109,7 +150,7 @@ async function selectCandidate(candidateId) {
         showExpandedResume(resumeData);
     } catch (error) {
         console.error('Resume fetch error:', error);
-        showError('Error loading resume. Please try again.');
+        showError('Error while searching resumes. ' + (error.message || 'Check server connection.'));
         hideExpandedResume();
     }
 }
@@ -125,8 +166,31 @@ function updateSelectedCard(candidateId) {
 }
 
 function showExpandedResume(resumeData) {
-    const markdownHTML = marked.parse(resumeData.llm_response_markdown || '');
-    llmResponse.innerHTML = markdownHTML;
+    // Логируем для отладки
+    console.log('showExpandedResume received:', resumeData);
+    // Если есть ошибка
+    if (resumeData.error) {
+        showError('Error loading resume: ' + resumeData.error);
+        return;
+    }
+    // Если backend вернул content как строку (старый/простой вариант)
+    if (typeof resumeData.content === 'string') {
+        llmResponse.innerHTML = marked.parse(resumeData.content);
+        resumeText.textContent = '';
+        expandedResume.classList.remove('hidden');
+        expandedResume.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    // Если backend вернул объект с llm_response_markdown и resume_plain
+    if (resumeData.content && typeof resumeData.content === 'object') {
+        llmResponse.innerHTML = marked.parse(resumeData.content.llm_response_markdown || '');
+        resumeText.textContent = resumeData.content.resume_plain || 'Resume not found';
+        expandedResume.classList.remove('hidden');
+        expandedResume.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    // Если backend вернул llm_response_markdown и resume_plain на верхнем уровне
+    llmResponse.innerHTML = marked.parse(resumeData.llm_response_markdown || '');
     resumeText.textContent = resumeData.resume_plain || 'Resume not found';
     expandedResume.classList.remove('hidden');
     expandedResume.scrollIntoView({ behavior: 'smooth', block: 'start' });

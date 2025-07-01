@@ -1,9 +1,11 @@
 from config.config import Config
 import psycopg2
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance, HnswConfigDiff, HnswConfig
-
+from config.config import EmbedderConfig
+import requests
+import json
 
 conn = psycopg2.connect(dbname=Config.POSTGRES_DB, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASSWORD, host=Config.POSTGRES_HOST, port=Config.POSTGRES_PORT)
 cur = conn.cursor()
@@ -21,14 +23,22 @@ def has_collection(client, collection_name):
     except Exception as e:
         return False
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# model = SentenceTransformer('all-MiniLM-L6-v2')
 ids, texts1, texts2 = zip(*rows)
 
 client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)
 if not has_collection(client, "first_collection"):
     print("Creating first collection...")
-    embeddings1 = model.encode(texts1)
-    print(embeddings1)
+    # embeddings1 = model.encode(texts1)
+    embeddings1 = []
+    for text in texts1:
+        embedding = requests.post(
+            EmbedderConfig.get_connection_string() + "/generate",
+            json={"text": text}
+        ).json()
+        embedding = embedding["response"]
+        embedding = json.loads(embedding)
+    # print(embeddings1)
     client.recreate_collection(
         collection_name="first_collection",
         # vectors_config={"size": len(embeddings1[0]), "distance": "Cosine"},
