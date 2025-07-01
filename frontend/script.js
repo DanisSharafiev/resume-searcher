@@ -175,7 +175,7 @@ function showExpandedResume(resumeData) {
     }
     // Если backend вернул content как строку (старый/простой вариант)
     if (typeof resumeData.content === 'string') {
-        llmResponse.innerHTML = marked.parse(resumeData.content);
+        llmResponse.textContent = resumeData.content;
         resumeText.textContent = '';
         expandedResume.classList.remove('hidden');
         expandedResume.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -183,14 +183,14 @@ function showExpandedResume(resumeData) {
     }
     // Если backend вернул объект с llm_response_markdown и resume_plain
     if (resumeData.content && typeof resumeData.content === 'object') {
-        llmResponse.innerHTML = marked.parse(resumeData.content.llm_response_markdown || '');
+        llmResponse.textContent = resumeData.content.llm_response_markdown || '';
         resumeText.textContent = resumeData.content.resume_plain || 'Resume not found';
         expandedResume.classList.remove('hidden');
         expandedResume.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
     }
     // Если backend вернул llm_response_markdown и resume_plain на верхнем уровне
-    llmResponse.innerHTML = marked.parse(resumeData.llm_response_markdown || '');
+    llmResponse.textContent = resumeData.llm_response_markdown || '';
     resumeText.textContent = resumeData.resume_plain || 'Resume not found';
     expandedResume.classList.remove('hidden');
     expandedResume.scrollIntoView({ behavior: 'smooth', block: 'start' });
