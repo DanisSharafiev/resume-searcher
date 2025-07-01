@@ -46,7 +46,12 @@ async def search(request: Request, data: SearchRequest):
     ids_1 = qdrant_model.search(collection_name="first_collection", query=embedding, limit=10)
 
     llm_response = llm_model.get_query(data.query)
-    embedding = llm_response["data"]
+    embedding = requests.post(
+        EmbedderConfig.get_connection_string() + "/generate",
+        json={"text": str(llm_response["data"])} 
+    ).json()
+    logger.info(f"{embedding}")
+    embedding = embedding["response"]
     logger.info(f"Embedding generated: {embedding}")
     embedding = json.loads(embedding)
     ids_2 = qdrant_model.search(collection_name="first_collection", query=embedding, limit=10)
