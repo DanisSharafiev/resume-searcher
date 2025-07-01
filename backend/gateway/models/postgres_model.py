@@ -9,6 +9,10 @@ class PostgresModel:
         self.cur.execute("SELECT * FROM items WHERE id = %s", (item_id,))
         return self.cur.fetchone()
 
+    def fetch_position_experience_age(self, item_id):
+        self.cur.execute("SELECT positionName, experience, age FROM items WHERE id = %s", (item_id,))
+        return self.cur.fetchone()
+
     def close(self):
         self.cur.close()
         self.conn.close()

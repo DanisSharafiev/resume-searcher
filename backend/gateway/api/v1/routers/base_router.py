@@ -39,9 +39,12 @@ async def search(request: Request, data: SearchRequest):
     logger.info(f"Embedding generated: {embedding}")
     embedding = json.loads(embedding)
     ids = qdrant_model.search(collection_name="first_collection", query=embedding, limit=10)
+    postgres_model = request.app.state.postgres_model
     result = []
     for id in ids:
-        result.append({"id": id, "name": "Sample Name", "position": "Sample Position"})
+        # Position : positionName, Experience : experience years, Age : age years old
+        additional_info = postgres_model.fetch_position_experience_age(id)
+        result.append({"id": id, "name": additional_info[0], "position": f"{additional_info[1]} years of experience, {additional_info[2]} years old"})
     return {"results": result}
 
 @router.get("/resume/{resume_id}")
